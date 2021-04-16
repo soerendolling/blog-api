@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const db = require("./lib/db");
+const Post = require("./models/post");
+const Comment = require("./models/comment");
 
 /*
   We create an express app calling
@@ -32,7 +35,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/posts", (req, res) => {
-  db.findAll()
+  // in th (we can look for certain stuff)
+  Post.find()
     .then((posts) => {
       res.status(200);
       res.json(posts);
@@ -46,7 +50,7 @@ app.get("/posts", (req, res) => {
 });
 
 app.post("/posts", (req, res) => {
-  db.insert(req.body)
+  Post.create(req.body)
     .then((posts) => {
       res.status(200);
       res.json(posts);
@@ -59,15 +63,11 @@ app.post("/posts", (req, res) => {
     });
 });
 
-app.post("/posts", (req, res) => {
-  // if (!req.body.title && req.body.body){
-
-  // }
-
-  db.insert(req.body)
-    .then((posts) => {
+app.post("/comments", (req, res) => {
+  Comment.create(req.body)
+    .then((comment) => {
       res.status(200);
-      res.json(posts);
+      res.json(comment);
     })
     .catch((error) => {
       res.status(500);
@@ -80,7 +80,7 @@ app.post("/posts", (req, res) => {
 app.get("/posts/:id", (req, res) => {
   const { id } = req.params;
 
-  db.findById(id)
+  Post.findById(id)
     .then((post) => {
       if (post) {
         res.status(200);
@@ -101,10 +101,34 @@ app.get("/posts/:id", (req, res) => {
     });
 });
 
+app.get("/comments/:id", (req, res) => {
+  const { id } = req.params;
+
+  Comment.findById(id)
+    .then((comment) => {
+      if (comment) {
+        res.status(200);
+        res.json(comment);
+        console.log(comment);
+      } else {
+        res.status(404);
+        res.json({
+          error: `Id:${id} not found`,
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500);
+      res.json({
+        error: `Internal server error ${error}`,
+      });
+    });
+});
+
 app.patch("/posts/:id", (req, res) => {
   const { id } = req.params;
 
-  db.updateById(id, req.body)
+  Post.findByIdAndUpdate(id, req.body)
     .then((post) => {
       if (post) {
         res.status(200);
@@ -127,7 +151,8 @@ app.patch("/posts/:id", (req, res) => {
 
 app.delete("/posts/:id", (req, res) => {
   const { id } = req.params;
-  db.deleteById(id).then((post) => {
+
+  Post.findByIdAndDelete(id).then((post) => {
     res.status(204);
     res.json(post);
     console.log(`Deleted Post nUmber ${id} `);
@@ -138,6 +163,15 @@ app.delete("/posts/:id", (req, res) => {
   We have to start the server. We make it listen on the port 4000
 
 */
-app.listen(4000, () => {
-  console.log("Listening on http://localhost:4000");
+
+// localhost = 127.0.0.1
+mongoose.connect("mongodb://localhost/blogs", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const mongodb = mongoose.connection;
+mongodb.on("open", () => {
+  app.listen(4000, () => {
+    console.log("Listening on http://localhost:4000");
+  });
 });
