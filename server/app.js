@@ -165,10 +165,10 @@ app.delete("/posts/:id", (req, res) => {
 
 */
 
-const { PORT } = process.env;
+const { PORT, MONGO_URL } = process.env;
 
 // localhost = 127.0.0.1
-mongoose.connect("mongodb://localhost/blogs", {
+mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
